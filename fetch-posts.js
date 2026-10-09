@@ -42,7 +42,7 @@ function fetchAndSeparatePosts() {
                 // 2. معالجة كل مقال وحفظه في ملف منفصل
                 entries.forEach((entry, index) => {
                     // استخراج معرف المقال الفريد (Post ID)
-                    const idMatch = entry.id.\$t.match(/post-(\d+)/);
+                    const idMatch = entry.id ? entry.id.\$t.match(/post-(\d+)/) : null;
                     const postId = idMatch ? idMatch[1] : `item-${index + 1}`;
                     const fileName = `post-${postId}.json`;
                     const filePath = path.join(OUTPUT_DIR, fileName);
