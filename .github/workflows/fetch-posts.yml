@@ -1,27 +1,31 @@
-name: Fetch Blogger Posts Automatically
+name: Blogger Posts Auto Sync
 
 on:
   schedule:
-    # يعمل تلقائياً كل 6 ساعات لتفقد المقالات الجديدة
+    # تشغيل الآلية تلقائياً كل 6 ساعات لجلب المقالات الجديدة
     - cron: '0 */6 * * *'
-  workflow_dispatch: # لتشغيله يدوياً بأي وقت من GitHub
+  workflow_dispatch: # يتيح لك تشغيل السكربت يدوياً بنقرة زر من تبويب Actions في GitHub
 
 jobs:
-  build-and-fetch:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Fetch Blogger Feed and Save
-        run: |
-          # جلب بيانات المقالات من بلوجر وتخزينها في ملف JSON ثابت
-          curl -s "https://blogtomeya.blogspot.com/feeds/posts/default?alt=json&max-results=50" -o posts.json
-          
-      - name: Commit and Push Updated Posts
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Execute Fetch Script
+        run: node fetch-posts.js
+
+      - name: Commit & Push Updated Posts
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add posts.json
-          git commit -m "Auto update Blogger posts [skip ci]" || exit 0
+          git commit -m "Auto Update: Blogger Posts Synced [skip ci]" || exit 0
           git push
