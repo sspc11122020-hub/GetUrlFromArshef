@@ -1,0 +1,12 @@
+{
+  "name": "seso-blogger-fetcher",
+  "version": "1.0.0",
+  "description": "Auto fetch posts from Blogger feed",
+  "main": "fetch-posts.js",
+  "scripts": {
+    "start": "node fetch-posts.js"
+  },
+  "keywords": [],
+  "author": "SeSo",
+  "license": "ISC"
+}
