@@ -5,7 +5,6 @@ const https = require('https');
 const BLOG_URL = 'https://blogtomeya.blogspot.com/feeds/posts/default?alt=json&max-results=500';
 const OUTPUT_DIR = path.join(__dirname, 'arsh');
 
-// إنشاء مجلد arsh إن لم يكن موجوداً
 if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
@@ -28,18 +27,17 @@ function fetchAndSeparatePosts() {
                     return;
                 }
 
-                // 1. فرز المقالات وتعديل الترتيب ليكون من الأقدم إلى الأحدث
+                // فرز المقالات من الأقدم إلى الأحدث
                 entries.sort((a, b) => {
                     const dateA = new Date(a.published && a.published['$t'] ? a.published['$t'] : 0);
                     const dateB = new Date(b.published && b.published['$t'] ? b.published['$t'] : 0);
-                    return dateA - dateB; // الأقدم أولاً
+                    return dateA - dateB;
                 });
 
                 let newPostsCount = 0;
                 let skippedCount = 0;
                 const indexList = [];
 
-                // 2. معالجة كل مقال وحفظه في ملف منفصل
                 entries.forEach((entry, index) => {
                     const rawId = entry.id && entry.id['$t'] ? entry.id['$t'] : '';
                     const idMatch = rawId.match(/post-(\d+)/);
@@ -51,10 +49,12 @@ function fetchAndSeparatePosts() {
                     const linkObj = entry.link ? entry.link.find((l) => l.rel === 'alternate') : null;
                     const url = linkObj ? linkObj.href : '#';
 
-                    // استخراج الصورة المصغرة وتكبير جودتها
+                    // استخراج الصور مع تجنب أخطاء الترميز
                     let thumbnail = 'https://via.placeholder.com/600x400/1f1f1f/ffffff?text=SeSo';
-                    if (entry.media$thumbnail && entry.media$thumbnail.url) {
-                        thumbnail = entry.media\$thumbnail.url.replace(/\/s[0-9]+(-c)?\//, '/s1600/');
+                    
+                    const mediaThumb = entry['media\$thumbnail'];
+                    if (mediaThumb && mediaThumb.url) {
+                        thumbnail = mediaThumb.url.replace(/\/s[0-9]+(-c)?\//, '/s1600/');
                     } else if (entry.content && entry.content['\$t']) {
                         const imgMatch = entry.content['\$t'].match(/src="([^"]+)"/);
                         if (imgMatch) thumbnail = imgMatch[1];
@@ -87,7 +87,6 @@ function fetchAndSeparatePosts() {
                         jsonFile: `/arsh/${fileName}`
                     });
 
-                    // 3. منع التكرار
                     if (!fs.existsSync(filePath)) {
                         fs.writeFileSync(filePath, JSON.stringify(postData, null, 2), 'utf-8');
                         newPostsCount++;
@@ -96,7 +95,6 @@ function fetchAndSeparatePosts() {
                     }
                 });
 
-                // 4. حفظ ملف الفهرس
                 fs.writeFileSync(
                     path.join(OUTPUT_DIR, 'index.json'),
                     JSON.stringify({
@@ -108,9 +106,8 @@ function fetchAndSeparatePosts() {
                 );
 
                 console.log(`✅ اكتملت العملية بنجاح!`);
-                console.log(`🔹 مقالات جديدة تم إنشاؤها: ${newPostsCount}`);
-                console.log(`🔹 مقالات تم تجاوزها: ${skippedCount}`);
-                console.log(`📁 تم تحديث ملف الفهرس: arsh/index.json`);
+                console.log(`🔹 مقالات جديدة: ${newPostsCount}`);
+                console.log(`🔹 مقالات سابقة: ${skippedCount}`);
 
             } catch (error) {
                 console.error('❌ حدث خطأ أثناء تحليل البيانات:', error.message);
