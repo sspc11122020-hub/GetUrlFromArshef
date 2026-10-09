@@ -1,0 +1,27 @@
+name: Fetch Blogger Posts Automatically
+
+on:
+  schedule:
+    # يعمل تلقائياً كل 6 ساعات لتفقد المقالات الجديدة
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # لتشغيله يدوياً بأي وقت من GitHub
+
+jobs:
+  build-and-fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Fetch Blogger Feed and Save
+        run: |
+          # جلب بيانات المقالات من بلوجر وتخزينها في ملف JSON ثابت
+          curl -s "https://blogtomeya.blogspot.com/feeds/posts/default?alt=json&max-results=50" -o posts.json
+          
+      - name: Commit and Push Updated Posts
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add posts.json
+          git commit -m "Auto update Blogger posts [skip ci]" || exit 0
+          git push
